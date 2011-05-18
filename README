@@ -1,0 +1,10 @@
+This is a mostly working zsh completion script for the lunar commands lin, lrm
+and lvu.
+
+To install, just drop the _lunar file into some directory in your fpath. You
+may need to rm your ~/.zcompdump to refresh your cache.
+
+TODO:
+  - don't use hardcoded moonbase path
+  - completion for the lunar command (yeaah~)
+  - probably some bugs..
