@@ -11,8 +11,6 @@ _lunar_comp() {
         '*::command:->command' && return 0
 
     if (( CURRENT == 1 )); then
-        local -a lunar_no_args
-        lunar_no_args=( prune renew update rebuild optimize fix nofix fixdepends )
         local -a lunar_commands
         lunar_commands=(
             'prune:Removes old sources and install/compile logs'
@@ -36,6 +34,9 @@ _lunar_comp() {
         _describe -t commands 'lunar command' lunar_commands && ret=0
         return ret
     else
+        local -a lunar_no_args
+        lunar_no_args=( prune renew update rebuild optimize fix nofix fixdepends )
+
         curcontext="${curcontext%:*:*}:lunar-$words[1]:"
         if (( $+functions[_lunar-$words[1]] )); then
             _call_function ret _lunar-$words[1]
@@ -119,8 +120,6 @@ _lvu() {
     '*::command:->command' && return 0
 
     if (( CURRENT == 1 )); then
-        local -a lvu_no_args
-        lvu_no_args=( orphans conflicts held exiled expired export moonbase html updatelog pam )
         local -a lvu_commands
         lvu_commands=(
             'what:display a module''s description'
@@ -177,6 +176,9 @@ _lvu() {
 
         return ret
     elif (( CURRENT == 2 )); then
+        local -a lvu_no_args
+        lvu_no_args=( alien leafs orphans conflicts held exiled expired export moonbase html updatelog pam )
+
         curcontext="${curcontext%:*:*}:lvu-$words[1]:"
         if (( $+functions[_lvu-$words[1]] )); then
             _call_function ret _lvu-$words[1]
