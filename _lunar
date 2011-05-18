@@ -1,0 +1,172 @@
+#compdef lin lrm lvu
+
+_lrm () {
+  _arguments \
+    '(-d --debug)'{-d,--debug}'[Enables debug messages]' \
+    '(-D --downgrade)'{-D,--downgrade}'[downgrades a module]:module:_lunar_modules:version' \
+    '(-h --help)'{-h,--help}'[Displays this help text]' \
+    '(-k --keepconfig)'{-k,--keepconfig}'[remove module(s) but keep dependencies and config]' \
+    '(-n --nosustain)'{-n,--nosustain}'[removes module(s) even if they are sustained]' \
+    '(-u --upgrade)'{-u,--upgrade}'[remove the module but do not run scripts etc.]' \
+    '(-v --verbose)'{-v,--verbose}'[Increases the level of message output]' \
+    '(-p --purge)'{-p,--purge}'[Delete all modules that depend on the module(s) being removed as well]' \
+    '*:module:_lunar_modules' && return 0
+}
+
+_lin () {
+  _arguments \
+    '(-c --compile)'{-c,--compile}'[Ignore /var/cache/lunar and compiles]' \
+    '(-d --debug)'{-d,--debug}'[Enables debug messages]' \
+    '--deps[Configure modules and determine dependencies]' \
+    '(-f --from)'{-f,--from}'[Specify an alternate for /var/spool/lunar]:directory:_files -/' \
+    '(-h --help)'{-h,--help}'[Displays help text]' \
+    '--opts[Add custom configure options to the module]:configure option string' \
+    '(-p --probe)'{-p,--probe}'[Only lin if not already installed]' \
+    '(-r --reconfigure)'{-r,--reconfigure}'[Select new dependencies for modules]' \
+    '(-R --resurrect)'{-R,--resurrect}'[Force to be unpacked from /var/cache/lunar]' \
+    '(-s --silent)'{-s,--silent}'[Decreases the level of message output]' \
+    '(-v --verbose)'{-v,--verbose}'[Increases the level of message output]' \
+    '(-w --want)'{-w,--want}'[Try to install a different version]:wanted version' \
+    '*:module:_lunar_modules' && return 0
+}
+
+_lvu() {
+    local suf ret=1 curcontext="$curcontext"
+    local -a vals state line expl
+
+  _arguments -C \
+    '(- :)-d[Enables debug messages]' \
+    '(- :)-h[Display help text]' \
+    '(- :)-v[Increases the level of message output]' \
+    '*::arg:->command' && return
+
+    if (( CURRENT == 1 )); then
+        local -a lvu_commands
+        lvu_commands=(
+            'what:display a module''s description'
+            'short:display a module''s short description'
+            'where:display a module''s section'
+            'cd:change directory to module and execs a new shell'
+            'alien:discover untracked files'
+            'from:discover what installed a given file'
+            'leafs:display installed modules that have no explicit dependencies on them'
+            'orphans:display installed modules that are missing dependencies'
+            'conflicts:display conflicting files'
+            'held:display held modules'
+            'exiled:display exiled modules'
+            'expired:display a list of modules which need an update'
+            'info:display terse summary information about module'
+            'search:searches all modules long descriptions for phrase.'
+            'service:displays modules that provide that service'
+            'website:display a module''s website'
+            'install:display an install log'
+            'size:find and show installed size of a module or ALL (slow)'
+            'installed:display installed modules/version of module'
+            'compile:display a compile log'
+            'compiler:display the compiler version used'
+            'links:display a list of modules that this module links to'
+            'sources:display source files for a module'
+            'urls:display all URLs for a module'
+            'maintainer:display maintainer for a module'
+            'version:display version of module in moonbase'
+            'new:attempt to create a new module from scratch'
+            'edit:copy a module to zlocal for editing'
+            'diff:view changes on edited module'
+            'submit:attempt to submit a module to the lunar ML'
+            'unedit:delete zlocal copy of a module'
+            'sum:display checksums'
+            'md5sum:display md5sums'
+            'export:make snapshot of box''s configuration.'
+            'import:restores an exported snapshot.'
+            'section:display moonbase sections'
+            'moonbase:display text listing of the moonbase'
+            'html:display html listing of the moonbase'
+            'updatelog:display summary log of previous lunar update'
+            'activity:display main log file'
+            'newer:display available modules newer than Aug 01, 2003'
+            'older:display modules installed before Jan 01, 2003'
+            'voyeur:peak into module compilation'
+            'pam:display installed modules that are Linux-PAM aware'
+            'depends:displays installed modules that explicitly or recursively depend on this module.'
+            'tree:displays a tree of the module''s dependencies'
+            'stree:same as ''tree'' but highly abbreviated'
+            'eert:same as ''tree'' but reverse and installed deps only'
+            'leert:full reverse dependency tree')
+
+        _describe -t commands 'lvu command' lvu_commands && ret=0
+
+        return ret
+    elif (( CURRENT == 2 )); then
+        curcontext="${curcontext%:*:*}:lvu-$words[1]:"
+        if (( $+functions[_lvu-$words[1]] )); then
+            _call_function ret _lvu-$words[1]
+        elif [[ -n "${lvu_no_args[(r)${words[1]}]}" ]]; then
+            _message "lvu ${words[1]} requires no arguments"
+        else
+            _lunar_modules
+        fi
+        return ret
+    else
+        _message "No further arguments"
+    fi
+
+}
+
+
+_lunar_modules() {
+    vals=( /var/lib/lunar/moonbase/*/*(/:t) )
+    _describe -t modules 'moonbase module' vals && return 0
+}
+
+_lvu-service() {
+    _alternative \
+     'service:service name:_lvu-service-service' \
+     'port:port number:_guard "[0-9]#" "port number"'
+}
+
+_lvu-service-service() {
+    vals=( ${(f)"$(cat /etc/services | grep -E -o '^(\w+)' | sort | uniq)"} )
+    _describe -t modules 'service' vals && return 0
+}
+
+_lvu-unedit() {
+    vals=( /var/lib/lunar/moonbase/zlocal/*(/:t) )
+    _describe -t modules 'moonbase module from zlocal' vals && return 0
+}
+
+_lvu-newer() {
+    _message "date string"
+}
+
+_lvu-older() {
+    _message "date string"
+}
+
+_lvu-import() {
+    _files
+}
+
+_lvu-from() {
+    _files
+}
+
+_lvu-new() {
+    _message "module name"
+}
+
+_lvu-search() {
+    _message "search string"
+}
+
+lvu_no_args=( orphans conflicts held exiled expired export moonbase html updatelog pam )
+
+_lunar() {
+    case "$service" in
+        lin) _lin "$@";;
+        lrm) _lrm "$@";;
+        lvu) _lvu "$@";;
+        *) _message "unknown command $service";;
+    esac
+}
+
+_lunar "$@"
