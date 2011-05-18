@@ -38,9 +38,11 @@ _lvu() {
     '(- :)-d[Enables debug messages]' \
     '(- :)-h[Display help text]' \
     '(- :)-v[Increases the level of message output]' \
-    '*::arg:->command' && return
+    '*::command:->command' && return 0
 
     if (( CURRENT == 1 )); then
+        local -a lvu_no_args
+        lvu_no_args=( orphans conflicts held exiled expired export moonbase html updatelog pam )
         local -a lvu_commands
         lvu_commands=(
             'what:display a module''s description'
@@ -114,6 +116,7 @@ _lvu() {
 
 
 _lunar_modules() {
+    local vals
     vals=( /var/lib/lunar/moonbase/*/*(/:t) )
     _describe -t modules 'moonbase module' vals && return 0
 }
@@ -125,11 +128,19 @@ _lvu-service() {
 }
 
 _lvu-service-service() {
+    local vals
     vals=( ${(f)"$(cat /etc/services | grep -E -o '^(\w+)' | sort | uniq)"} )
     _describe -t modules 'service' vals && return 0
 }
 
+_lvu-diff() {
+    local vals
+    vals=( /var/lib/lunar/moonbase/zlocal/*(/:t) )
+    _describe -t modules 'moonbase module from zlocal' vals && return 0
+}
+
 _lvu-unedit() {
+    local vals
     vals=( /var/lib/lunar/moonbase/zlocal/*(/:t) )
     _describe -t modules 'moonbase module from zlocal' vals && return 0
 }
@@ -157,8 +168,6 @@ _lvu-new() {
 _lvu-search() {
     _message "search string"
 }
-
-lvu_no_args=( orphans conflicts held exiled expired export moonbase html updatelog pam )
 
 _lunar() {
     case "$service" in
