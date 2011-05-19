@@ -1,17 +1,21 @@
 #compdef lunar lin lrm lvu
 
+# completion for lunar itself (different name, see below)
 _lunar_comp() {
     local suf ret=1 curcontext="$curcontext"
     local -a vals state line expl
 
+    # regular arguments, this will probably just hand down to the * command below
     _arguments -C \
         '(- :)-d[Enables debug messages]' \
         '(- :)-h[Display help text]' \
         '(- :)-v[Increases the level of message output]' \
         '*::command:->command' && return 0
 
+    # complete the first word, ie. subcommand
     if (( CURRENT == 1 )); then
         local -a lunar_commands
+        # all lunar subcommands
         lunar_commands=(
             'prune:Removes old sources and install/compile logs'
             'renew:Checks ver. against moonbase & recompiles if necessary'
@@ -31,31 +35,45 @@ _lunar_comp() {
             'exile:Remove a module a/o prevent it from being resurrected'
             'unexile:Allows a module to be compiled|resurrected again')
 
+        # just show the commands with description
         _describe -t commands 'lunar command' lunar_commands && ret=0
         return ret
     else
+
+        # at this point, we have to decide what to complete for specific subcommands
+
+        # make a list of subcommands with no further arguments for later
         local -a lunar_no_args
         lunar_no_args=( prune renew update rebuild optimize fix nofix fixdepends )
 
+        # update the current context
         curcontext="${curcontext%:*:*}:lunar-$words[1]:"
+        # if there is a specific function of the form _lunar-subcommand
         if (( $+functions[_lunar-$words[1]] )); then
+            # call that for completion
             _call_function ret _lunar-$words[1]
         elif [[ -n "${lunar_no_args[(r)${words[1]}]}" ]]; then
+            # all commands from the array above take no further arguments
             _message "lunar ${words[1]} requires no arguments"
         else
+            # by default, complete modules
             _lunar_modules
         fi
         return ret
     fi
 }
 
+# specific completion for lunar set
 _lunar-set() {
+    # second argument: all lunar variables
     if (( CURRENT == 2 )); then
         local vars
         vars=( ${(f)"$(cat /var/lib/lunar/unset.sh | cut -d' ' -f2)"} )
         _describe -t modules 'lunar variable' vars && return 0
+    # third argument: some value
     elif (( CURRENT == 3 )); then
         _message "value"
+    # no further argument
     else
         _message "no further arguments"
     fi
@@ -109,6 +127,7 @@ _lin() {
     '*:module:_lunar_modules' && return 0
 }
 
+# completion for lvu, very similar to the lunar one above (therefore uncommented)
 _lvu() {
     local suf ret=1 curcontext="$curcontext"
     local -a vals state line expl
@@ -194,13 +213,6 @@ _lvu() {
 
 }
 
-
-_lunar_modules() {
-    local vals
-    vals=( /var/lib/lunar/moonbase/*/*(/:t) )
-    _describe -t modules 'moonbase module' vals && return 0
-}
-
 _lvu-service() {
     _alternative \
      'service:service name:_lvu-service-service' \
@@ -249,7 +261,16 @@ _lvu-search() {
     _message "search string"
 }
 
+# specific completion for moonbase modules
+_lunar_modules() {
+    local vals
+    vals=( /var/lib/lunar/moonbase/*/*(/:t) )
+    _describe -t modules 'moonbase module' vals && return 0
+}
+
+# hub function called for completion
 _lunar() {
+    # decide which completion to use
     case "$service" in
         lin) _lin "$@";;
         lrm) _lrm "$@";;
