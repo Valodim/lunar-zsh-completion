@@ -107,7 +107,7 @@ _lrm() {
     '(-u --upgrade)'{-u,--upgrade}'[remove the module but do not run scripts etc.]' \
     '(-v --verbose)'{-v,--verbose}'[Increases the level of message output]' \
     '(-p --purge)'{-p,--purge}'[Delete all modules that depend on the module(s) being removed as well]' \
-    '*:module:_lunar_modules' && return 0
+    '*:module:_lunar_installed_modules' && return 0
 }
 
 _lin() {
@@ -266,6 +266,13 @@ _lunar_modules() {
     local vals
     vals=( /var/lib/lunar/moonbase/*/*(/:t) )
     _describe -t modules 'moonbase module' vals && return 0
+}
+
+# specific completion for moonbase modules
+_lunar_installed_modules() {
+    local vals
+    vals=( ${(f)"$(lvu installed | cut -d':' -f1)"} )
+    _describe -t modules 'moonbase installed module' vals && return 0
 }
 
 # hub function called for completion
